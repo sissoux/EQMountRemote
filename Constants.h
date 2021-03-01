@@ -4,8 +4,8 @@
 #define OFF -1
 #define ON  -2
 
-#define TIMEOUT_CMD         1000  // Default=1000 (1 second)
-#define BACKGROUND_CMD_RATE 300   // Default=300, regulates the background command rate
+#define TIMEOUT_CMD         3000  // Default=1000 (1 second)
+#define BACKGROUND_CMD_RATE 1000   // Default=300, regulates the background command rate
 
 // enable debugging messages on DebugSer
 #define DEBUG_OFF                 // default=_OFF, use "DEBUG_ON" to activate
