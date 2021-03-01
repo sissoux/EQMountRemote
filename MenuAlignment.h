@@ -5,7 +5,7 @@ void SmartHandController::menuAlignment()
   int maxAlignStars, thisStar, numStars;
   bool alignInProgress=false;
 
-  if (!telInfo.getAlignStars(&maxAlignStars, &thisStar, &numStars)) { maxAlignStars=1; thisStar=1; numStars=1; }
+  if (!telInfo.getAlignStars(&maxAlignStars, &thisStar, &numStars)) { maxAlignStars=1; thisStar=1; numStars=1; DL("GotFalseAlign");}
   if (maxAlignStars > 9 || numStars > 9)  { maxAlignStars=1; thisStar=1; numStars=1; }
   if (thisStar > 0 && thisStar <= numStars) alignInProgress=true;
 

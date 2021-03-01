@@ -4,11 +4,11 @@
 #define OFF -1
 #define ON  -2
 
-#define TIMEOUT_CMD         1000  // Default=1000 (1 second)
-#define BACKGROUND_CMD_RATE 300   // Default=300, regulates the background command rate
+#define TIMEOUT_CMD         8000  // Default=1000 (1 second) // 6-7 seconds needed for the freakin alignement start........
+#define BACKGROUND_CMD_RATE 1000   // Default=300, regulates the background command rate
 
 // enable debugging messages on DebugSer
-#define DEBUG_OFF                 // default=_OFF, use "DEBUG_ON" to activate
+#define DEBUG_ON                 // default=_OFF, use "DEBUG_ON" to activate
 #define DebugSer Serial           // default=Serial, or Serial1 for example (always 9600 baud)
 #define DEBUGBUTTON_OFF           // defualt=_OFF, use "DEBUGBUTTON" to activate
 

@@ -320,15 +320,12 @@ void SmartHandController::setup(const char version[], const int pin[7],const boo
   drawIntro();
   tickButtons();
 
-  for (int i = 0; i < 3; i++)
-  {
-    Ser.print(":#");
-    delay(400);
-    Ser.flush();
-    delay(100);
-  }
+  Ser.print(":#");
+  delay(400);
+  Ser.flush();
+  delay(100);
 
-  DisplayMessage(L_ESTABLISHING, L_CONNECTION, 1000);
+  DisplayMessage(L_ESTABLISHING, L_CONNECTION, 200);
   
   // OnStep coordinate mode for getting and setting RA/Dec
   // 0 = OBSERVED_PLACE (same as not supported)
@@ -338,7 +335,6 @@ void SmartHandController::setup(const char version[], const int pin[7],const boo
 
   int thisTry=0;
 again:
-  delay(4000);
   if (GetLX200(":GXEE#", s) == LX200VALUEGET) {
     if (s[0]=='0') {
       telescopeCoordinates=OBSERVED_PLACE; 
@@ -355,7 +351,8 @@ again:
       DisplayMessage(L_COORDINATES, "J2000 ?", 2000);
     }
   } else {
-    if (++thisTry <= 4) goto again;
+    delay(200);
+    if (++thisTry <= 10) goto again;
     telescopeCoordinates=OBSERVED_PLACE;
     DisplayMessage(L_CONNECTION, L_FAILED "!", 1000);
   }
