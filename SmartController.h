@@ -15,14 +15,14 @@
 #define ASTROMETRIC_J2000 3
 
 // Single byte guide commands
-#define ccMe 14
-#define ccMw 15
-#define ccMn 16
-#define ccMs 17
-#define ccQe 18
-#define ccQw 19
-#define ccQn 20
-#define ccQs 21
+#define ccMe ":Me#"
+#define ccMw ":Mw#"
+#define ccMn ":Mn#"
+#define ccMs ":Ms#"
+#define ccQe ":Qe#"
+#define ccQw ":Qw#"
+#define ccQn ":Qn#"
+#define ccQs ":Qs#"
 
 enum MENU_RESULT { MR_OK, MR_CANCEL, MR_QUIT };
 

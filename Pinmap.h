@@ -51,8 +51,8 @@
     #define B_PIN0 3   // Shift
     #define B_PIN1 4   // N
     #define B_PIN2 2   // S
-    #define B_PIN3 1   // E
-    #define B_PIN4 5   // W
+    #define B_PIN3 5   // E
+    #define B_PIN4 1   // W
     #define B_PIN5 6   // F
     #define B_PIN6 0   // f
 
