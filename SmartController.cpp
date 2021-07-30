@@ -283,7 +283,17 @@ void SmartHandController::setup(const char version[], const int pin[7],const boo
   if (strlen(version)<=19) strcpy(_version,version);
   
   telInfo.lastState = 0;
-  buttonPad.setup( pin, active);
+#if KEYPAD_JOYSTICK_ANALOG == JS1
+  pinMode(B_PIN1,INPUT_PULLUP);
+  pinMode(B_PIN2,INPUT_PULLUP);
+  delay(100);
+  int v1=analogRead(B_PIN1);
+  int v2=analogRead(B_PIN3);
+  buttonPad.setup( pin, active, v1, v2);
+#else
+  buttonPad.setup( pin, active, 0, 0);
+#endif
+
 #if ST4_INTERFACE == ON
   auxST4.setup();
 #endif
@@ -298,23 +308,21 @@ void SmartHandController::setup(const char version[], const int pin[7],const boo
     analogWrite(UTILITY_LIGHT_PIN, UTILITY_LIGHT);
   #endif
 #endif
-
+  
   //choose a 128x64 display supported by U8G2lib (if not listed below there are many many others in u8g2 library example Sketches)
+  delay(500);
   if (model == OLED_SH1106) display = new U8G2_EXT_SH1106_128X64_NONAME_1_HW_I2C(U8G2_R0);
   else if (model == OLED_SSD1306) display = new U8G2_EXT_SSD1306_128X64_NONAME_F_HW_I2C(U8G2_R0);
   else if (model == OLED_SSD1309) display = new U8G2_EXT_SSD1309_128X64_NONAME_F_HW_I2C(U8G2_R0);
   
   display->begin();
   display->setContrast(maxContrast);
-  display->setFont(u8g2_font_helvR10_tf);
-
-#ifdef DEBUG_ON
-  DebugSer.begin(9600);
-  delay(1000);
-#endif
+  display->setFont(LF_STANDARD);
 
   // establish comms and clear the channel
   Ser.begin(SerialBaud);
+
+  delay(500);
   
   // display the splash screen
   drawIntro();
@@ -329,7 +337,7 @@ void SmartHandController::setup(const char version[], const int pin[7],const boo
   }
 
   DisplayMessage(L_ESTABLISHING, L_CONNECTION, 1000);
-  
+
   // OnStep coordinate mode for getting and setting RA/Dec
   // 0 = OBSERVED_PLACE (same as not supported)
   // 1 = TOPOCENTRIC (does refraction)
@@ -342,22 +350,24 @@ again:
   if (GetLX200(":GXEE#", s) == LX200VALUEGET) {
     if (s[0]=='0') {
       telescopeCoordinates=OBSERVED_PLACE; 
-      DisplayMessage(L_CONNECTION, L_WARNING "!", 1000);
-      DisplayMessage(L_COORDINATES, L_OBSERVED_PLACE ".", 2000);
-  } else 
+      DisplayMessage(L_CONNECTION, L_OK "!", 1000);
+      VLF("HCM: SHC Connection established");
+    } else 
     if (s[0]=='1') {
       telescopeCoordinates=TOPOCENTRIC; 
       DisplayMessage(L_CONNECTION, L_OK "!", 1000);
+      VLF("HCM: SHC Connection established");
     } else 
     if (s[0]=='2') {
       telescopeCoordinates=ASTROMETRIC_J2000;
-      DisplayMessage(L_CONNECTION, L_WARNING "!", 1000);
-      DisplayMessage(L_COORDINATES, "J2000 ?", 2000);
+      DisplayMessage(L_CONNECTION, L_OK "!", 1000);
+      VLF("HCM: SHC Connection established");
     }
   } else {
     if (++thisTry <= 4) goto again;
     telescopeCoordinates=OBSERVED_PLACE;
-    DisplayMessage(L_CONNECTION, L_FAILED "!", 1000);
+    DisplayMessage(L_CONNECTION, L_WARNING "!", 1000);
+    DisplayMessage(L_COORDINATES, L_OBSERVED_PLACE ".", 2000);
   }
 }
 
@@ -387,9 +397,7 @@ void SmartHandController::update()
   if (display_blank_time && top - time_last_action > display_blank_time) { display->sleepOn(); sleepDisplay = true; return; }
   if (display_dim_time && top - time_last_action > display_dim_time && !lowContrast) { display->setContrast(0); lowContrast = true; return; }
 
-  // power cycle reqd message
-  if (powerCylceRequired) { display->setFont(u8g2_font_helvR12_tf); DisplayMessage(L_REBOOT "REBOOT", L_DEVICE "DEVICE", 1000); return; }
-  
+  // show align state
   if (telInfo.align == Telescope::ALI_SELECT_STAR_1 || telInfo.align == Telescope::ALI_SELECT_STAR_2 || telInfo.align == Telescope::ALI_SELECT_STAR_3 || 
       telInfo.align == Telescope::ALI_SELECT_STAR_4 || telInfo.align == Telescope::ALI_SELECT_STAR_5 || telInfo.align == Telescope::ALI_SELECT_STAR_6 ||
       telInfo.align == Telescope::ALI_SELECT_STAR_7 || telInfo.align == Telescope::ALI_SELECT_STAR_8 || telInfo.align == Telescope::ALI_SELECT_STAR_9) {
@@ -411,13 +419,17 @@ void SmartHandController::update()
     // mark this as the next alignment star 
     telInfo.align = static_cast<Telescope::AlignState>(telInfo.align + 1);
   } else
+
+  // otherwise update the main display
   if (top - lastpageupdate > BACKGROUND_CMD_RATE/2) updateMainDisplay(page);
-  
+
+  // let the user know if the comms are down
   if (telInfo.connected == false) DisplayMessage(L_DISCONNECT_MSG1, L_DISCONNECT_MSG2, -1);
 
-  // is a goto happening?
-  if (telInfo.connected && (telInfo.getTrackingState() == Telescope::TRK_SLEWING || telInfo.getParkState() == Telescope::PRK_PARKING))
-  {
+  // -------------------------------------------------------------------------------------------------------------------
+  // handle gotos and guiding
+  if (telInfo.connected && (telInfo.getTrackingState() == Telescope::TRK_SLEWING || telInfo.getParkState() == Telescope::PRK_PARKING)) {
+    // gotos
     if (buttonPad.nsewPressed()) {
       Ser.print(":Q#"); Ser.flush();
       if (telInfo.align != Telescope::ALI_OFF) telInfo.align = static_cast<Telescope::AlignState>(telInfo.align - 1); // try another align star?
@@ -427,11 +439,8 @@ void SmartHandController::update()
       DisplayMessage(L_SLEW_MSG1, L_SLEW_MSG2 "!", 1000);
       return;
     }
-  } else
-
-  // -------------------------------------------------------------------------------------------------------------------
-  // handle the guiding buttons
-  {
+  } else {
+    // guiding
     buttonCommand = false;
 #if ST4_INTERFACE == ON
     if (!moveEast  && (buttonPad.e.isDown() || auxST4.e.isDown())) { moveEast = true;   Ser.write(ccMe); buttonCommand=true; } else
@@ -443,25 +452,24 @@ void SmartHandController::update()
     if (!moveSouth && (buttonPad.s.isDown() || auxST4.s.isDown())) { moveSouth = true;  Ser.write(ccMs); buttonCommand=true; } else
     if (moveSouth  && (buttonPad.s.isUp()   && auxST4.s.isUp()))   { moveSouth = false; Ser.write(ccQs); buttonCommand=true; buttonPad.s.clearPress(); auxST4.s.clearPress(); }
 #else
-    if (!moveEast  && (buttonPad.e.isDown())) { moveEast = true;   Ser.print(ccMe); buttonCommand=true; } else
-    if (moveEast   && (buttonPad.e.isUp()  )) { moveEast = false;  Ser.print(ccQe); buttonCommand=true; buttonPad.e.clearPress(); }
-    if (!moveWest  && (buttonPad.w.isDown())) { moveWest = true;   Ser.print(ccMw); buttonCommand=true; } else
-    if (moveWest   && (buttonPad.w.isUp()  )) { moveWest = false;  Ser.print(ccQw); buttonCommand=true; buttonPad.w.clearPress(); }
-    if (!moveNorth && (buttonPad.n.isDown())) { moveNorth = true;  Ser.print(ccMn); buttonCommand=true; } else
-    if (moveNorth  && (buttonPad.n.isUp()  )) { moveNorth = false; Ser.print(ccQn); buttonCommand=true; buttonPad.n.clearPress(); }
-    if (!moveSouth && (buttonPad.s.isDown())) { moveSouth = true;  Ser.print(ccMs); buttonCommand=true; } else
-    if (moveSouth  && (buttonPad.s.isUp()  )) { moveSouth = false; Ser.print(ccQs); buttonCommand=true; buttonPad.s.clearPress(); }
+    if (!moveEast  && (buttonPad.e.isDown())) { moveEast = true;   Ser.write(ccMe); buttonCommand=true; } else
+    if (moveEast   && (buttonPad.e.isUp()  )) { moveEast = false;  Ser.write(ccQe); buttonCommand=true; buttonPad.e.clearPress(); }
+    if (!moveWest  && (buttonPad.w.isDown())) { moveWest = true;   Ser.write(ccMw); buttonCommand=true; } else
+    if (moveWest   && (buttonPad.w.isUp()  )) { moveWest = false;  Ser.write(ccQw); buttonCommand=true; buttonPad.w.clearPress(); }
+    if (!moveNorth && (buttonPad.n.isDown())) { moveNorth = true;  Ser.write(ccMn); buttonCommand=true; } else
+    if (moveNorth  && (buttonPad.n.isUp()  )) { moveNorth = false; Ser.write(ccQn); buttonCommand=true; buttonPad.n.clearPress(); }
+    if (!moveSouth && (buttonPad.s.isDown())) { moveSouth = true;  Ser.write(ccMs); buttonCommand=true; } else
+    if (moveSouth  && (buttonPad.s.isUp()  )) { moveSouth = false; Ser.write(ccQs); buttonCommand=true; buttonPad.s.clearPress(); }
 #endif
     if (buttonCommand) { time_last_action = millis(); return; }
   }
 
   // -------------------------------------------------------------------------------------------------------------------
   // handle the feature buttons
-  char cmd[32];
-  static bool focOut=false;
-  static bool focIn=false;
-  static bool rotCw=false;
-  static bool rotCcw=false;
+  enum FocusState {FS_STOPPED, FS_IN_FAST, FS_IN_SLOW, FS_OUT_SLOW, FS_OUT_FAST};
+  static FocusState focusState = FS_STOPPED;
+  enum RotState {RS_STOPPED, RS_CW_FAST, RS_CW_SLOW, RS_CCW_SLOW, RS_CCW_FAST};
+  static RotState rotState = RS_STOPPED;
   buttonCommand=false;
   if (telInfo.align != Telescope::ALI_OFF) featureKeyMode = 1;
   switch (featureKeyMode) {
@@ -506,25 +514,22 @@ void SmartHandController::update()
       if (buttonPad.f.wasPressed()) { Ser.print(":B+#"); strcpy(briefMessage,L_FKEY_RETI_UP); }
     break;
     case 5: case 6:  // focuser1/2
-      if (featureKeyMode==5) strcpy(cmd,":FA1#"); else strcpy(cmd,":FA2#"); 
-           if (!focOut && buttonPad.F.isDown()) { focOut = true;  strcat(cmd,":FS#:F+#"); SetLX200(cmd); strcpy(briefMessage,L_FKEY_FOC_DN); buttonCommand=true; }
-      else if ( focOut && buttonPad.F.isUp())   { focOut = false; Ser.print(":FQ#"); buttonCommand=true; buttonPad.F.clearPress(); }
-      else if (!focIn  && buttonPad.f.isDown()) { focIn = true;   strcat(cmd,":FS#:F-#"); SetLX200(cmd); strcpy(briefMessage,L_FKEY_FOC_UP); buttonCommand=true; }
-      else if ( focIn  && buttonPad.f.isUp())   { focIn = false;  Ser.print(":FQ#"); buttonCommand=true; buttonPad.f.clearPress(); }
+           if (focusState == FS_STOPPED && buttonPad.F.isDown()) { focusState=FS_OUT_SLOW; Ser.print(":FS#:F+#"); strcpy(briefMessage,L_FKEY_FOC_DN); buttonCommand=true; }
+      else if ((focusState == FS_OUT_SLOW || focusState == FS_OUT_FAST) && buttonPad.F.isUp()) { focusState=FS_STOPPED; Ser.print(":FQ#"); buttonCommand=true; buttonPad.F.clearPress(); }
+      else if (focusState == FS_STOPPED && buttonPad.f.isDown()) { focusState=FS_IN_SLOW;  Ser.print(":FS#:F-#"); strcpy(briefMessage,L_FKEY_FOC_UP); buttonCommand=true; }
+      else if ((focusState == FS_IN_SLOW || focusState == FS_IN_FAST) && buttonPad.f.isUp()) { focusState=FS_STOPPED; Ser.print(":FQ#"); buttonCommand=true; buttonPad.f.clearPress(); }
 #ifndef FOCUSER_ACCELERATE_DISABLE_ON
-      // acceleration control
-      else if ((focOut && buttonPad.F.isDown() && (buttonPad.F.timeDown()>5000))) { Ser.print(":FF#:F+#"); strcpy(briefMessage,L_FKEY_FOCF_DN); }
-      else if ((focIn  && buttonPad.f.isDown() && (buttonPad.f.timeDown()>5000))) { Ser.print(":FF#:F-#"); strcpy(briefMessage,L_FKEY_FOCF_UP); }
+      else if ((focusState == FS_OUT_SLOW && buttonPad.F.isDown() && (buttonPad.F.timeDown()>5000))) { focusState=FS_OUT_FAST; Ser.print(":FF#:F+#"); strcpy(briefMessage,L_FKEY_FOCF_DN); }
+      else if ((focusState == FS_IN_SLOW  && buttonPad.f.isDown() && (buttonPad.f.timeDown()>5000))) { focusState=FS_IN_FAST;  Ser.print(":FF#:F-#"); strcpy(briefMessage,L_FKEY_FOCF_UP); }
 #endif
     break;
     case 7:  // rotator
-           if (!rotCcw && buttonPad.F.isDown()) { rotCcw = true;  Ser.print(":r2#:rc#:r<#"); strcpy(briefMessage,L_FKEY_ROT_DN); buttonCommand=true; }
-      else if ( rotCcw && buttonPad.F.isUp())   { rotCcw = false; Ser.print(":rQ#"); buttonCommand=true; buttonPad.F.clearPress(); }
-      else if (!rotCw  && buttonPad.f.isDown()) { rotCw = true;   Ser.print(":r2#:rc#:r>#"); strcpy(briefMessage,L_FKEY_ROT_UP); buttonCommand=true; }
-      else if ( rotCw  && buttonPad.f.isUp())   { rotCw = false;  Ser.print(":rQ#"); buttonCommand=true; buttonPad.f.clearPress(); }
-      // acceleration control
-      else if ((rotCcw && buttonPad.F.isDown() && (buttonPad.F.timeDown()>5000))) { Ser.print(":r4#:rc#:r<#"); strcpy(briefMessage,L_FKEY_ROTF_DN); }
-      else if (( rotCw && buttonPad.f.isDown() && (buttonPad.f.timeDown()>5000))) { Ser.print(":r4#:rc#:r>#"); strcpy(briefMessage,L_FKEY_ROTF_UP); }
+           if (rotState == RS_STOPPED && buttonPad.F.isDown()) { rotState = RS_CCW_SLOW; Ser.print(":r2#:rc#:r<#"); strcpy(briefMessage,L_FKEY_ROT_DN); buttonCommand=true; }
+      else if ((rotState == RS_CCW_SLOW || rotState == RS_CCW_FAST) && buttonPad.F.isUp()) { rotState = RS_STOPPED; Ser.print(":rQ#"); buttonCommand=true; buttonPad.F.clearPress(); }
+      else if (rotState == RS_STOPPED && buttonPad.f.isDown()) { rotState = RS_CW_SLOW;  Ser.print(":r2#:rc#:r>#"); strcpy(briefMessage,L_FKEY_ROT_UP); buttonCommand=true; }
+      else if ((rotState == RS_CW_SLOW || rotState == RS_CW_FAST) && buttonPad.f.isUp()) { rotState = RS_STOPPED; Ser.print(":rQ#"); buttonCommand=true; buttonPad.f.clearPress(); }
+      else if ((rotState == RS_CCW_SLOW && buttonPad.F.isDown() && (buttonPad.F.timeDown()>5000))) { rotState = RS_CCW_FAST; Ser.print(":r4#:rc#:r<#"); strcpy(briefMessage,L_FKEY_ROTF_DN); }
+      else if ((rotState == RS_CW_SLOW  && buttonPad.f.isDown() && (buttonPad.f.timeDown()>5000))) { rotState = RS_CW_FAST;  Ser.print(":r4#:rc#:r>#"); strcpy(briefMessage,L_FKEY_ROTF_UP); }
     break;
   }
   if (buttonCommand) { time_last_action = millis(); return; }
@@ -577,7 +582,7 @@ void SmartHandController::update()
 void SmartHandController::updateMainDisplay( u8g2_uint_t page)
 {
   u8g2_t *u8g2 = display->getU8g2();
-  display->setFont(u8g2_font_helvR12_tf);
+  display->setFont(LF_LARGE);
   u8g2_uint_t line_height = u8g2_GetAscent(u8g2) - u8g2_GetDescent(u8g2) + MY_BORDER_SIZE;
 
   // get the status
@@ -610,13 +615,13 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
         telInfo.updateTime();
 
   // prep. brief message, simply place the message in the briefMessage string and it'll show for one second
-  static char lastMessage[20]="";
+  static char lastMessage[40]="";
   static unsigned long startTime=0;
   if (strlen(briefMessage) != 0) { startTime=millis(); strcpy(lastMessage,briefMessage); strcpy(briefMessage,""); }
   if (strlen(lastMessage) != 0) {
     if ((long)(millis()-startTime) > 1000) strcpy(lastMessage,"");
   }
-
+ 
   // the graphics loop
   u8g2_FirstPage(u8g2);
   do
@@ -634,9 +639,9 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
         int pgr=telInfo.getPulseGuideRate();
         if ((pgr!=gr) && (pgr>=0) && (pgr<3)) strcat(string_Speed[gr],string_PSpeed[pgr]); 
         if ((gr>=0) && (gr<=9)) {
-          display->setFont(u8g2_font_helvR10_tf);
+          display->setFont(LF_STANDARD);
           u8g2_DrawUTF8(u8g2, 0, icon_height, string_Speed[gr]);
-          display->setFont(u8g2_font_helvR12_tf);
+          display->setFont(LF_LARGE);
         }
       }
 
@@ -713,8 +718,7 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
     } else
 
     // show equatorial coordinates
-    if (page == 0)
-    {
+    if (page == 0) {
       if (telInfo.hasInfoRa && telInfo.hasInfoDec) {
         char rs[20]; strcpy(rs,telInfo.TempRa); int l=strlen(rs); if (l>1) rs[l-1]=0;
         u8g2_uint_t x = u8g2_GetDisplayWidth(u8g2)-u8g2_GetUTF8Width(u8g2,"00000000");
@@ -755,7 +759,7 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
         char us[20]; strcpy(us,telInfo.TempUniversalTime); int l=strlen(us); if (l>1) us[l-1]=0;
         x = u8g2_GetDisplayWidth(u8g2)-u8g2_GetUTF8Width(u8g2,"00000000");
         u8g2_uint_t y = 36;
-        display->setFont(u8g2_font_helvR10_tf); u8g2_DrawUTF8(u8g2, 0, y, "UT"); display->setFont(u8g2_font_helvR12_tf);
+        display->setFont(LF_STANDARD); u8g2_DrawUTF8(u8g2, 0, y, "UT"); display->setFont(LF_LARGE);
         display->DrawFwNumeric(x,y,us);
 
         char ss[20]; strcpy(ss,telInfo.TempSidereal); l=strlen(ss); if (l>1) ss[l-1]=0;
@@ -768,7 +772,7 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
     if (page == 3) {
       // T24.6 P997mb
       // H46% DP13.7C
-      display->setFont(u8g2_font_helvR10_tf);
+      display->setFont(LF_STANDARD);
 
       double T,P,H,DP;
       if (telInfo.getT(T) && telInfo.getP(P) && telInfo.getH(H) && telInfo.getDP(DP)) {
@@ -792,7 +796,7 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
         display->DrawFwNumeric(dx-display->GetFwNumericWidth(line),y,line);
       }
       
-      display->setFont(u8g2_font_helvR12_tf);
+      display->setFont(LF_LARGE);
     } else
 
     // show align status
@@ -805,7 +809,7 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
       u8g2_DrawUTF8(u8g2, 0, y, txt);
 
       y += line_height + 4;
-      u8g2_SetFont(u8g2, u8g2_font_unifont_t_greek);
+      u8g2_SetFont(u8g2, LF_GREEK);
       u8g2_DrawGlyph(u8g2, 0, y, 945 + cat_mgr.bayerFlam());
 
       const uint8_t* myfont = u8g2->font; u8g2_SetFont(u8g2, myfont);
@@ -868,7 +872,7 @@ void SmartHandController::DisplayMessage(const char* txt1, const char* txt2, int
 
 void SmartHandController::DisplayLongMessage(const char* txt1, const char* txt2, const char* txt3, const char* txt4, int duration)
 {
-  display->setFont(u8g2_font_helvR10_tf);
+  display->setFont(LF_STANDARD);
   uint8_t h = 15;
   uint8_t x = 0;
   uint8_t y = h;
@@ -904,7 +908,7 @@ void SmartHandController::DisplayLongMessage(const char* txt1, const char* txt2,
   } while (display->nextPage());
   if (duration >= 0) delay(duration); else { buttonPad.waitForPress(); buttonPad.clearAllPressed(); }
 
-  display->setFont(u8g2_font_helvR12_tf);
+  display->setFont(LF_LARGE);
 }
   
 bool SmartHandController::DisplayMessageLX200(LX200RETURN val, bool silentOk)

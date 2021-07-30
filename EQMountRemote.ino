@@ -1,7 +1,7 @@
 /*
 * Title       Smart Hand Controller (based on TeenAstro)
 *
-* Copyright (C) 2018 to 2020 Charles Lemaire, Howard Dutton
+* Copyright (C) 2018 to 2021 Charles Lemaire, Howard Dutton, and Others
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@
 #define FirmwareDate          __DATE__
 #define FirmwareTime          __TIME__
 #define FirmwareVersionMajor  "1"
-#define FirmwareVersionMinor  "8"
-#define FirmwareVersionPatch  "g"
+#define FirmwareVersionMinor  "9"
+#define FirmwareVersionPatch  "m"
 
 #include "Constants.h"
 #include "Locales.h"
@@ -55,6 +55,10 @@ SmartHandController HdCrtlr;
 void setup(void)
 {
   HdCrtlr.setup(Version, pin, active, SERIAL_BAUD_DEFAULT, static_cast<SmartHandController::OLED>(DISPLAY_OLED));
+  
+  // say hello
+  VF("HCM: SHC Addon "); V(FirmwareVersionMajor); V("."); V(FirmwareVersionMinor); VL(FirmwareVersionPatch);
+  VF("HCM: MCU = "); VLF(MCU_STR);
 }
 
 void loop()

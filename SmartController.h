@@ -15,14 +15,14 @@
 #define ASTROMETRIC_J2000 3
 
 // Single byte guide commands
-#define ccMe ":Me#"
-#define ccMw ":Mw#"
-#define ccMn ":Mn#"
-#define ccMs ":Ms#"
-#define ccQe ":Qe#"
-#define ccQw ":Qw#"
-#define ccQn ":Qn#"
-#define ccQs ":Qs#"
+#define ccMe 14
+#define ccMw 15
+#define ccMn 16
+#define ccMs 17
+#define ccQe 18
+#define ccQw 19
+#define ccQn 20
+#define ccQs 21
 
 enum MENU_RESULT { MR_OK, MR_CANCEL, MR_QUIT };
 
@@ -48,13 +48,12 @@ private:
 
   Telescope telInfo;
   char _version[20]="Version ?";
-  char briefMessage[20]="";
+  char briefMessage[40]="";
 
   void updateMainDisplay( u8g2_uint_t page);
   bool sleepDisplay = false;
   bool lowContrast = false;
   uint8_t maxContrast = 255;
-  bool powerCylceRequired = false;
   bool buttonCommand = false;
   bool moveNorth=false;
   bool moveSouth=false;
@@ -131,6 +130,9 @@ private:
   void menuBlankTimeout();
   void menuFocuser1();
   void menuFocuser2();
+  bool menuSetFocTCCoef(uint8_t &foc);
+  bool menuSetFocBacklash(uint8_t &foc);
+  bool menuSetFocTCDeadband(uint8_t &foc);
   void menuRotator();
   void menuLatitude();
   void menuLongitude();
