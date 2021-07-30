@@ -55,6 +55,27 @@
   #define DISPLAY_RESET_PIN  14    // Pin14 used to reset some displays, i.e. the SSD1309
 #endif
 
+  #ifdef __MYBOARD__
+    #define B_PIN0 3   // Shift
+    #define B_PIN1 4   // N
+    #define B_PIN2 2   // S
+    #define B_PIN3 5   // E
+    #define B_PIN4 1   // W
+    #define B_PIN5 6   // F
+    #define B_PIN6 0   // f
+
+    #define ST4RAw 12    // ST4 (OnStep) RA- West,  send data to OnStep
+    #define ST4DEs 13    // ST4 (OnStep) DE- South, clock input to ISR
+    #define ST4DEn 11    // ST4 (OnStep) DE+ North, recv data from OnStep
+    #define ST4RAe 10    // ST4 (OnStep) RA+ East,  always 25 Hz square wave on this pin
+
+    #define UTILITY_LIGHT_PIN  9    // Pin10 used as PWM output to drive utility lamp LED
+
+    #define DISPLAY_RESET_PIN  14    // Pin14 used to reset some displays, i.e. the SSD1309
+  #endif
+
+#endif
+
 #ifdef ESP32
   // workaround for ESP32 crashing on EEPROM commit
   #define DISABLE_EEPROM_COMMIT_ON
