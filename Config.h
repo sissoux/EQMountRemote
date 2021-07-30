@@ -7,7 +7,7 @@
  * 
  *           *** Read the compiler warnings and errors, they are there to help guard against invalid configurations ***
 */
-
+#define __MYBOARD__
 // ---------------------------------------------------------------------------------------------------------------------------------
 // ADJUST THE FOLLOWING TO CONFIGURE YOUR ADD-ON'S FEATURES ------------------------------------------------------------------------
 // <-Req'd = always must set, <-Often = usually must set, Option = optional, Adjust = adjust as req'd, Infreq = infrequently changed
