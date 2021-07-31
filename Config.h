@@ -22,7 +22,7 @@
 #define SERIAL_INTERFACE        Serial3 // Se..T4, SerialST4 for ST4 port sync comms, you can also use any other available  Infreq
                                           //         serial port (if pins are unused,) Serial3 for example, on the Teensy3.2
                                           //         This is the serial interface connected to OnStep.
-#define SERIAL_BAUD_DEFAULT          9600 //   9600, Common baud rates for these parameters are 9600,19200,57600,115200.      Infreq
+#define SERIAL_BAUD_DEFAULT          115200 //   9600, Common baud rates for these parameters are 9600,19200,57600,115200.      Infreq
                                           //         Only used for async serial communication with OnStep.
 
 // USER FEEDBACK -------------------------------------------------------------------------------------------------------------------
