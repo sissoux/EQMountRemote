@@ -24,6 +24,7 @@
 #define ccQn 20
 #define ccQs 21
 
+
 enum MENU_RESULT { MR_OK, MR_CANCEL, MR_QUIT };
 
 class SmartHandController
