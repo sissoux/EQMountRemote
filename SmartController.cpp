@@ -579,9 +579,9 @@ void SmartHandController::update()
           // cycles through disp of Eq, Hor, Time, Ambient OR...
           page++;
   #if DISPLAY_AMBIENT_CONDITIONS == ON
-          if (page > 3) page = 0;
+          if (page > 4) page = 0;
   #else
-          if (page > 2) page = 0;
+          if (page > 3) page = 0;
   #endif
         } else {
           // ...if aligning, accept the align star
@@ -619,7 +619,7 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
         telInfo.align == Telescope::ALI_SLEW_STAR_4 || telInfo.align == Telescope::ALI_SLEW_STAR_5 || telInfo.align == Telescope::ALI_SLEW_STAR_6 ||
         telInfo.align == Telescope::ALI_SLEW_STAR_7 || telInfo.align == Telescope::ALI_SLEW_STAR_8 || telInfo.align == Telescope::ALI_SLEW_STAR_9)
        ) telInfo.align = static_cast<Telescope::AlignState>(telInfo.align + 1);
-    page = 4;
+    page = 5;
   }
 
   // update status info.
@@ -631,6 +631,9 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
     else
       if (page == 2)
         telInfo.updateTime();
+    else
+      if (page == 3)
+        telInfo.updateIntervalometer();
 
   // prep. brief message, simply place the message in the briefMessage string and it'll show for one second
   static char lastMessage[40]="";
@@ -786,8 +789,35 @@ void SmartHandController::updateMainDisplay( u8g2_uint_t page)
         display->DrawFwNumeric(x,y,ss);
       }
     } else
-
+    
+    // show intervalometer status
     if (page == 3) {
+      if (telInfo.hasInfoIntervalometer)
+      {
+        u8g2_uint_t y = 36;
+        if (IsIntervalometerActive )
+        {
+          char shootCount[7];
+          sprintf(shootCount,"%3d/%3d", telInfo.IntvCount-telInfo.IntvCurrentCapture, telInfo.IntvCount);
+
+          x = u8g2_GetDisplayWidth(u8g2)-u8g2_GetUTF8Width(u8g2,"0000000");
+          display->setFont(LF_STANDARD); u8g2_DrawUTF8(u8g2, 0, y, "Shoot");
+          display->DrawFwNumeric(x,y,shootCount);
+          if (telInfo.IntvCurrentCapture==0) IsIntervalometerActive=false;
+        }
+        else
+        {
+          display->setFont(LF_STANDARD); u8g2_DrawUTF8(u8g2, 0, y, "Intervalometer off");
+        }
+        char SecondLine[20];
+        sprintf(SecondLine,"Expo %3ds /%2ds", telInfo.IntvExposure, telInfo.IntvDelay);
+        y += line_height + 4;
+        display->setFont(LF_STANDARD);display->DrawFwNumeric(0,y,SecondLine);
+
+      }
+    } else
+
+    if (page == 4) {
       // T24.6 P997mb
       // H46% DP13.7C
       display->setFont(LF_STANDARD);

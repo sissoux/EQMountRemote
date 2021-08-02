@@ -25,6 +25,30 @@ void Telescope::updateTime(boolean immediate)
     if ((updateSeq%3==2) || immediate) { hasInfoSidereal = GetLX200(":GS#", TempSidereal) == LX200VALUEGET; if (!hasInfoSidereal) connected = true; lastStateTime = millis(); }
   }
 };
+void Telescope::updateIntervalometer(bool immediate)
+{
+  if (((millis() - lastIntvTime > BACKGROUND_CMD_RATE) && connected) || immediate)
+  {
+    if ((updateSeq%3==1) || immediate) 
+    { 
+      char temp1[20];
+      hasInfoIntervalometer = GetLX200(":GXX1#", temp1);
+
+      if (hasInfoIntervalometer)
+      { 
+        char* conv_end;
+        IntvCurrentCapture = (uint16_t)strtod(temp1, &conv_end);
+        IntvExposure = (uint16_t)strtod(conv_end+1, &conv_end);
+        IntvDelay = (uint16_t)strtod(conv_end+1, &conv_end);
+        IntvCount = (uint16_t)strtod(conv_end+1, &conv_end);
+      }
+      lastIntvTime = millis();
+      if (!hasInfoIntervalometer) connected = true;
+    }
+    
+  }
+
+}
 void Telescope::updateTel(boolean immediate)
 {
   if (((millis() - lastStateTel > BACKGROUND_CMD_RATE) && connected) || immediate)
