@@ -87,6 +87,7 @@
 #define L_FKEY_FOCUSER "Focuser"
 #define L_FKEY_FOCUSER2 "Focuser 2"
 #define L_FKEY_ROTATOR "Rotator"
+#define L_FKEY_INTERVALOMETER "Intervalometer"
 #define L_FKEY_FEATURE_KEYS "Feature Keys"
 
 // main menu root
@@ -238,6 +239,14 @@
 #define L_ROTATOR "Rotator"
 #define L_ROT_AT_HOME_ZERO "At Home/Zero?"
 #define L_ROT_REVERSE "Reverse"
+
+// Intervalometer
+
+#define L_SET_INTV_EXP      "Expo time"
+#define L_SET_INTV_DELAY    "Pause time"
+#define L_SET_INTV_COUNT    "Expo count"
+#define L_INTV_S_UNITS      "s"
+#define L_STA_INTV_CAPT     "Capturing!"
 
 // -------------------- menu, sync/goto --------------------
 
@@ -408,6 +417,7 @@
 #define L_LX200_SNCOK_2 "Synced!"
 #define L_LX200_GOTOK_1 "Slew to"
 #define L_LX200_GOTOK_2 "Target"
+
 
 // ----------------------- u8g2_ext_catalog.cpp -------------------------
 

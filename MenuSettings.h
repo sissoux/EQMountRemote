@@ -7,29 +7,32 @@ void SmartHandController::menuSettings()
   {
     char string_list_SettingsL1[150] = "";
 
-    int i=1; int index[11];
-    index[1]=i++; strcat(string_list_SettingsL1,L_SET_DATE_TIME);
-    index[2]=i++; strcat(string_list_SettingsL1,"\n" L_SET_SITE);
-    if (telInfo.hasFocuser1()) { index[3]=i++; if (telInfo.hasFocuser2()) strcat(string_list_SettingsL1,"\n" L_SET_FOCUSER1); else strcat(string_list_SettingsL1,"\n" L_SET_FOCUSER); } else index[3]=-1;
-    if (telInfo.hasFocuser2()) { index[4]=i++; strcat(string_list_SettingsL1,"\n" L_SET_FOCUSER2); } else index[4]=-1;
-    if (telInfo.hasRotator())  { index[5]=i++; strcat(string_list_SettingsL1,"\n" L_SET_ROTATOR); } else index[5]=-1;
-    index[6]=i++; strcat(string_list_SettingsL1,"\n" L_SET_DISPLAY);
-    index[7]=i++; strcat(string_list_SettingsL1,"\n" L_SET_BUZ);
-    if (telInfo.isMountGEM()) { index[8]=i++; strcat(string_list_SettingsL1,"\n" L_SET_MERIDIAN_FLIP); } else index[8]=-1;
-    index[9]=i++; strcat(string_list_SettingsL1,"\n" L_SET_CONFIG);
-    index[10]=i++; strcat(string_list_SettingsL1,"\n" L_SET_VERSION);
+    int i=1; 
+    int index[12];
+    index[1]=i++; strcat(string_list_SettingsL1, L_FKEY_INTERVALOMETER);
+    index[2]=i++; strcat(string_list_SettingsL1,"\n" L_SET_DATE_TIME);
+    index[3]=i++; strcat(string_list_SettingsL1,"\n" L_SET_SITE);
+    if (telInfo.hasFocuser1()) { index[4]=i++; if (telInfo.hasFocuser2()) strcat(string_list_SettingsL1,"\n" L_SET_FOCUSER1); else strcat(string_list_SettingsL1,"\n" L_SET_FOCUSER); } else index[4]=-1;
+    if (telInfo.hasFocuser2()) { index[5]=i++; strcat(string_list_SettingsL1,"\n" L_SET_FOCUSER2); } else index[5]=-1;
+    if (telInfo.hasRotator())  { index[6]=i++; strcat(string_list_SettingsL1,"\n" L_SET_ROTATOR); } else index[6]=-1;
+    index[7]=i++; strcat(string_list_SettingsL1,"\n" L_SET_DISPLAY);
+    index[8]=i++; strcat(string_list_SettingsL1,"\n" L_SET_BUZ);
+    if (telInfo.isMountGEM()) { index[9]=i++; strcat(string_list_SettingsL1,"\n" L_SET_MERIDIAN_FLIP); } else index[9]=-1;
+    index[10]=i++; strcat(string_list_SettingsL1,"\n" L_SET_CONFIG);
+    index[11]=i++; strcat(string_list_SettingsL1,"\n" L_SET_VERSION);
 
     current_selection_L1 = display->UserInterfaceSelectionList(&buttonPad, L_SETTINGS, current_selection_L1, string_list_SettingsL1);
-    if (current_selection_L1==index[1]) menuLocalDateTime();
-    if (current_selection_L1==index[2]) menuSite();
-    if (current_selection_L1==index[3]) menuFocuser1();
-    if (current_selection_L1==index[4]) menuFocuser2();
-    if (current_selection_L1==index[5]) menuRotator();
-    if (current_selection_L1==index[6]) menuDisplay();
-    if (current_selection_L1==index[7]) menuSound();
-    if (current_selection_L1==index[8]) menuMeridianFlips();
-    if (current_selection_L1==index[9]) menuMount();
-    if (current_selection_L1==index[10]) menuFirmware();
+    if (current_selection_L1==index[1]) menuIntervalometer();
+    if (current_selection_L1==index[2]) menuLocalDateTime();
+    if (current_selection_L1==index[3]) menuSite();
+    if (current_selection_L1==index[4]) menuFocuser1();
+    if (current_selection_L1==index[5]) menuFocuser2();
+    if (current_selection_L1==index[6]) menuRotator();
+    if (current_selection_L1==index[7]) menuDisplay();
+    if (current_selection_L1==index[8]) menuSound();
+    if (current_selection_L1==index[9]) menuMeridianFlips();
+    if (current_selection_L1==index[10]) menuMount();
+    if (current_selection_L1==index[11]) menuFirmware();
   }
 }
 
@@ -471,3 +474,70 @@ void SmartHandController::menuRotator()
     }
   }
 }
+
+#define INTV_MIN_EXP_TIME  1
+#define INTV_MAX_EXP_TIME  999
+#define INTV_MIN_PAUSE_TIME  1
+#define INTV_MAX_PAUSE_TIME  999
+#define INTV_MIN_EXP_COUNT 1
+#define INTV_MAX_EXP_COUNT 500
+
+void SmartHandController::menuIntervalometer()
+{
+  const char *string_list_Display = L_SET_INTV_EXP "\n" L_SET_INTV_DELAY "\n" L_SET_INTV_COUNT;
+  current_selection_L2 = 1;
+  while (current_selection_L2 != 0)
+  {
+    current_selection_L2 = display->UserInterfaceSelectionList(&buttonPad, L_DISPLAY, current_selection_L2, string_list_Display);
+
+    char temp1[20];
+
+    if ( (DisplayMessageLX200(GetLX200(":GXX1#", temp1))))
+    { 
+
+      double Values[4] = {0,0,0,0};
+      uint8_t MaxValue = 4;
+      char* conv_end;
+      Values[0] = strtod(temp1, &conv_end);
+      MaxValue--;
+      while (*conv_end != '#' && MaxValue > 0)
+      {
+        IntervalometerParameters[3 - MaxValue] = (float)strtod(conv_end+1, &conv_end);
+        MaxValue--;
+      }
+    }
+    
+    char text[20];
+    switch (current_selection_L2)
+    {
+    case 1: //Exposure time
+      sprintf(text, "Interv " L_SET_INTV_EXP);
+      if (display->UserInterfaceInputValueFloat(&buttonPad, text, "", &IntervalometerParameters[0], INTV_MIN_EXP_TIME, INTV_MAX_EXP_TIME, 3, 0, " " L_INTV_S_UNITS))
+        {
+          char out[20];
+          sprintf(out, ":SXX1,E%u#", (unsigned int)IntervalometerParameters[0]);
+          DisplayMessageLX200(SetLX200(out),false);
+        }
+      break;
+    case 2: //Pause time
+      sprintf(text, "Interv " L_SET_INTV_DELAY);
+      if (display->UserInterfaceInputValueFloat(&buttonPad, text, "", &IntervalometerParameters[1], INTV_MIN_PAUSE_TIME, INTV_MAX_PAUSE_TIME, 3, 0, " " L_INTV_S_UNITS))
+        {
+          char out[20];
+          sprintf(out, ":SXX1,D%u#", (unsigned int)IntervalometerParameters[1]);
+          DisplayMessageLX200(SetLX200(out),false);
+        }
+      break;
+    case 3: //Number of Exposures
+      sprintf(text, "Interv " L_SET_INTV_COUNT);
+      if (display->UserInterfaceInputValueFloat(&buttonPad, text, "", &IntervalometerParameters[2], INTV_MIN_EXP_COUNT, INTV_MAX_EXP_COUNT, 3, 0, " "))
+        {
+          char out[20];
+          sprintf(out, ":SXX1,C%u#", (unsigned int)IntervalometerParameters[2]);
+          DisplayMessageLX200(SetLX200(out),false);
+        }    
+      break;
+    }
+  }
+}
+

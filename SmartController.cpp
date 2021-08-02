@@ -532,6 +532,23 @@ void SmartHandController::update()
       else if ((rotState == RS_CCW_SLOW && buttonPad.F.isDown() && (buttonPad.F.timeDown()>5000))) { rotState = RS_CCW_FAST; Ser.print(":r4#:rc#:r<#"); strcpy(briefMessage,L_FKEY_ROTF_DN); }
       else if ((rotState == RS_CW_SLOW  && buttonPad.f.isDown() && (buttonPad.f.timeDown()>5000))) { rotState = RS_CW_FAST;  Ser.print(":r4#:rc#:r>#"); strcpy(briefMessage,L_FKEY_ROTF_UP); }
     break;
+    case 8:  // Intervalometer
+      if (buttonPad.f.wasDoublePressed()) 
+      {
+        if (!IsIntervalometerActive)
+        {
+          IsIntervalometerActive = true;
+          Ser.print(":SXX1,V1#");
+          strcpy(briefMessage,"Start capture");
+        }
+        else 
+        {
+          IsIntervalometerActive = false;
+          Ser.print(":SXX1,V0#");
+          strcpy(briefMessage,"Stop capture");
+        }
+      }
+    break;
   }
   if (buttonCommand) { time_last_action = millis(); return; }
 

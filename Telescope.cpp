@@ -200,6 +200,16 @@ bool Telescope::hasFocuser1()
   if (focuser1>0) return true; else return false;
 }
 
+bool Telescope::hasIntervallometer()
+{
+  char out[20];
+  if ((GetLX200(":GXY1#", out) == LX200VALUEGET)) 
+  {
+    strcmp(out,"INTERVALOM"); 
+    return true;
+  }
+}
+
 bool Telescope::hasFocuser2()
 {
   static int focuser2 = -1;
@@ -235,6 +245,7 @@ bool Telescope::hasDeRotator()
   }
   return (_derotator>0);
 }
+
 
 bool Telescope::hasReticle()
 {

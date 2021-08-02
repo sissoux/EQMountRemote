@@ -90,6 +90,7 @@ public:
   Errors getError();
   bool hasFocuser1();
   bool hasFocuser2();
+  bool hasIntervallometer();
   bool hasRotator();
   bool hasDeRotator();
   bool hasReticle();

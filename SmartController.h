@@ -60,6 +60,7 @@ private:
   bool moveSouth=false;
   bool moveEast=false;
   bool moveWest=false;
+  bool IsIntervalometerActive=false;
 
   unsigned long lastpageupdate = millis();
   unsigned long time_last_action = millis();
@@ -83,6 +84,8 @@ private:
   uint8_t current_selection_filter_varmax = 1;
   uint8_t activeGuideRate = 5;
   uint8_t featureKeyMode = 1; // guide rate
+
+  float IntervalometerParameters[3] = {90,1,30}; //exposure time 1-255 seconds, wait between exposure 1-255 seconds, number of captures 1 - 255
 
   long angleRA = 0;
   long angleDEC = 0;
@@ -144,6 +147,7 @@ private:
   void menuMeridianE();
   void menuMeridianW();
   void menuFirmware();
+  void menuIntervalometer();
 
   void DisplayMessage(const char* txt1, const char* txt2 = NULL, int duration = 0);
   void DisplayLongMessage(const char* txt1, const char* txt2 = NULL, const char* txt3 = NULL, const char* txt4 = NULL, int duration = 0);
