@@ -49,6 +49,11 @@ public:
   char TelStatus[20];
   unsigned long lastStateTel;
   unsigned long updateSeq=0;
+  uint16_t IntvCurrentCapture;
+  uint16_t IntvExposure=0;
+  uint16_t IntvDelay=0;
+  uint16_t IntvCount=0;
+  unsigned long lastIntvTime;
 public:
   bool connected = true;
   bool hasInfoRa = false;
@@ -58,11 +63,13 @@ public:
   bool hasInfoUTC = false;
   bool hasInfoSidereal = false;
   bool hasTelStatus = false;
+  bool hasInfoIntervalometer = false;
   unsigned long lastState;
   void updateRaDec(boolean immediate=false);
   void updateAzAlt(boolean immediate=false);
   void updateTime(boolean immediate=false);
   void updateTel(boolean immediate=false);
+  void updateIntervalometer(bool immediate=false);
   bool getRA(double &RA);
   bool getDec(double &Dec);
   double getLstT0();
@@ -71,6 +78,8 @@ public:
   ParkState getParkState();
   TrackState getTrackingState();
   bool atHome();
+  bool isGPSSynced();
+  bool isPecEnabled();
   bool isPecPlaying();
   bool isPecRecording();
   bool isPecWaiting();
@@ -89,6 +98,7 @@ public:
   Errors getError();
   bool hasFocuser1();
   bool hasFocuser2();
+  bool hasIntervallometer();
   bool hasRotator();
   bool hasDeRotator();
   bool hasReticle();

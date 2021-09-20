@@ -7,12 +7,11 @@
  * 
  *           *** Read the compiler warnings and errors, they are there to help guard against invalid configurations ***
 */
-
+#define __MYBOARD__
 // ---------------------------------------------------------------------------------------------------------------------------------
 // ADJUST THE FOLLOWING TO CONFIGURE YOUR ADD-ON'S FEATURES ------------------------------------------------------------------------
 // <-Req'd = always must set, <-Often = usually must set, Option = optional, Adjust = adjust as req'd, Infreq = infrequently changed
 
-#define __MYBOARD__
 //      Parameter Name              Value   Default  Notes                                                                      Hint
 // DISPLAY -------------------------------------------------------------------------------------------------------------------------
 #define DISPLAY_LANGUAGE             L_en //   L_en, English. Specify language with two letter country code, if supported.    Adjust
@@ -35,6 +34,9 @@
 #define DISPLAY_24HR_TIME              ON //     ON, OFF to use 12 hour format for entering time.                             Option
 #define DISPLAY_DIM_TIMEOUT            30 //     30, n. Where n=0..600 seconds, 0 disables timeout.                           Adjust
 #define DISPLAY_BLANK_TIMEOUT         120 //    120, n. Where n=0..600 seconds, 0 disables timeout.                           Adjust
+
+// KEYPAD --------------------------------------------------------------------------------------------------------------------------
+#define KEYPAD_JOYSTICK_ANALOG        OFF //    OFF, JS1 for Jerry's analog joystick                                          Option
 
 // ST4 INTERFACE -------------------------------------------------------------------------------------------------------------------
 // *** It is up to you to verify the interface meets the electrical specifications of any connected device, use at your own risk ***

@@ -25,6 +25,30 @@ void Telescope::updateTime(boolean immediate)
     if ((updateSeq%3==2) || immediate) { hasInfoSidereal = GetLX200(":GS#", TempSidereal) == LX200VALUEGET; if (!hasInfoSidereal) connected = true; lastStateTime = millis(); }
   }
 };
+void Telescope::updateIntervalometer(bool immediate)
+{
+  if (((millis() - lastIntvTime > BACKGROUND_CMD_RATE) && connected) || immediate)
+  {
+    if ((updateSeq%3==1) || immediate) 
+    { 
+      char temp1[20];
+      hasInfoIntervalometer = GetLX200(":GXX1#", temp1);
+
+      if (hasInfoIntervalometer)
+      { 
+        char* conv_end;
+        IntvCurrentCapture = (uint16_t)strtod(temp1, &conv_end);
+        IntvExposure = (uint16_t)strtod(conv_end+1, &conv_end);
+        IntvDelay = (uint16_t)strtod(conv_end+1, &conv_end);
+        IntvCount = (uint16_t)strtod(conv_end+1, &conv_end);
+      }
+      lastIntvTime = millis();
+      if (!hasInfoIntervalometer) connected = true;
+    }
+    
+  }
+
+}
 void Telescope::updateTel(boolean immediate)
 {
   if (((millis() - lastStateTel > BACKGROUND_CMD_RATE) && connected) || immediate)
@@ -118,6 +142,17 @@ bool Telescope::atHome()
   if (strlen(TelStatus)<3) return false;
   if (TelStatus[2]&0b00000001) return true; else return false;
 }
+bool Telescope::isPecEnabled()
+{
+  // PEC status: 0 ignore, 1 get ready to play, 2 playing, 3 get ready to record, 4 recording
+  if (strlen(TelStatus)<5) return false;
+  if ((TelStatus[4]&0b00000111)==0) return false; else return true;
+}
+bool Telescope::isGPSSynced()
+{
+  if (strlen(TelStatus)<1) return false;
+  if ((TelStatus[0]&0b00000100)!=0) return true; else return false; //USE Previous PPS Sync Definition
+}
 bool Telescope::isPecPlaying()
 {
   // PEC status: 0 ignore, 1 get ready to play, 2 playing, 3 get ready to record, 4 recording
@@ -194,6 +229,16 @@ bool Telescope::hasFocuser1()
   if (focuser1>0) return true; else return false;
 }
 
+bool Telescope::hasIntervallometer()
+{
+  char out[20];
+  if ((GetLX200(":GXY1#", out) == LX200VALUEGET)) 
+  {
+    strcmp(out,"INTERVALOM"); 
+    return true;
+  }
+}
+
 bool Telescope::hasFocuser2()
 {
   static int focuser2 = -1;
@@ -229,6 +274,7 @@ bool Telescope::hasDeRotator()
   }
   return (_derotator>0);
 }
+
 
 bool Telescope::hasReticle()
 {

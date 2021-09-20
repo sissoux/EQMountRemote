@@ -15,14 +15,15 @@
 #define ASTROMETRIC_J2000 3
 
 // Single byte guide commands
-#define ccMe ":Me#"
-#define ccMw ":Mw#"
-#define ccMn ":Mn#"
-#define ccMs ":Ms#"
-#define ccQe ":Qe#"
-#define ccQw ":Qw#"
-#define ccQn ":Qn#"
-#define ccQs ":Qs#"
+#define ccMe 14
+#define ccMw 15
+#define ccMn 16
+#define ccMs 17
+#define ccQe 18
+#define ccQw 19
+#define ccQn 20
+#define ccQs 21
+
 
 enum MENU_RESULT { MR_OK, MR_CANCEL, MR_QUIT };
 
@@ -48,18 +49,18 @@ private:
 
   Telescope telInfo;
   char _version[20]="Version ?";
-  char briefMessage[20]="";
+  char briefMessage[40]="";
 
   void updateMainDisplay( u8g2_uint_t page);
   bool sleepDisplay = false;
   bool lowContrast = false;
   uint8_t maxContrast = 255;
-  bool powerCylceRequired = false;
   bool buttonCommand = false;
   bool moveNorth=false;
   bool moveSouth=false;
   bool moveEast=false;
   bool moveWest=false;
+  bool IsIntervalometerActive=false;
 
   unsigned long lastpageupdate = millis();
   unsigned long time_last_action = millis();
@@ -83,6 +84,8 @@ private:
   uint8_t current_selection_filter_varmax = 1;
   uint8_t activeGuideRate = 5;
   uint8_t featureKeyMode = 1; // guide rate
+
+  float IntervalometerParameters[3] = {90,1,30}; //exposure time 1-255 seconds, wait between exposure 1-255 seconds, number of captures 1 - 255
 
   long angleRA = 0;
   long angleDEC = 0;
@@ -131,6 +134,9 @@ private:
   void menuBlankTimeout();
   void menuFocuser1();
   void menuFocuser2();
+  bool menuSetFocTCCoef(uint8_t &foc);
+  bool menuSetFocBacklash(uint8_t &foc);
+  bool menuSetFocTCDeadband(uint8_t &foc);
   void menuRotator();
   void menuLatitude();
   void menuLongitude();
@@ -141,6 +147,7 @@ private:
   void menuMeridianE();
   void menuMeridianW();
   void menuFirmware();
+  void menuIntervalometer();
 
   void DisplayMessage(const char* txt1, const char* txt2 = NULL, int duration = 0);
   void DisplayLongMessage(const char* txt1, const char* txt2 = NULL, const char* txt3 = NULL, const char* txt4 = NULL, int duration = 0);

@@ -1,5 +1,5 @@
-
 // Feature Key Menu (double click)
+
 void SmartHandController::menuFeatureKey()
 {
   static unsigned short current_selection_feature_mode = 1;
@@ -7,7 +7,7 @@ void SmartHandController::menuFeatureKey()
 
   char string_feature_Modes[120] = L_FKEY_GUIDE_RATE "\n" L_FKEY_PULSE_GUIDE_RATE;
 
-  int i=2,j=-1,k=-1,l=-1,m=-1,n=-1;
+  int i=2,j=-1,k=-1,l=-1,m=-1,n=-1,o=-1;
   #if UTILITY_LIGHT != OFF
     { i++; j=i; strcat(string_feature_Modes,"\n" L_FKEY_UTILITY_LIGHT); }
   #endif
@@ -15,6 +15,7 @@ void SmartHandController::menuFeatureKey()
   if (telInfo.hasFocuser1()) { i++; l=i; if (telInfo.hasFocuser2()) strcat(string_feature_Modes,"\n" L_FKEY_FOCUSER1); else strcat(string_feature_Modes,"\n" L_FKEY_FOCUSER); }
   if (telInfo.hasFocuser2()) { i++; m=i; strcat(string_feature_Modes,"\n" L_FKEY_FOCUSER2); }
   if (telInfo.hasRotator())  { i++; n=i; strcat(string_feature_Modes,"\n" L_FKEY_ROTATOR);  }
+  if (telInfo.hasIntervallometer())  { i++; o=i; strcat(string_feature_Modes,"\n" L_FKEY_INTERVALOMETER);  }
 
   current_selection_feature_mode = display->UserInterfaceSelectionList(&buttonPad, L_FKEY_FEATURE_KEYS, current_selection_feature_mode, string_feature_Modes);
 
@@ -23,9 +24,10 @@ void SmartHandController::menuFeatureKey()
     if (current_selection_feature_mode==2) featureKeyMode=2; else // pulse guide rate
     if (current_selection_feature_mode==j) featureKeyMode=3; else // util. light
     if (current_selection_feature_mode==k) featureKeyMode=4; else // reticule
-    if (current_selection_feature_mode==l) featureKeyMode=5; else // focuser 1
-    if (current_selection_feature_mode==m) featureKeyMode=6; else // focuser 2
+    if (current_selection_feature_mode==l) { featureKeyMode=5; SetLX200(":FA1#"); } else // focuser 1
+    if (current_selection_feature_mode==m) { featureKeyMode=6; SetLX200(":FA2#"); } else // focuser 2
     if (current_selection_feature_mode==n) featureKeyMode=7; else // rotator
+    if (current_selection_feature_mode==o) featureKeyMode=8; else // Intervalometter
     { featureKeyMode=1; current_selection_feature_mode=1; } // default to guide rate
   } else current_selection_feature_mode = last_selection_feature_mode;
 }
@@ -36,7 +38,7 @@ void SmartHandController::menuMain()
   current_selection_L0 = 1;
   while (current_selection_L0 != 0)
   {
-    if (!telInfo.isMountAltAz()) {
+    if (telInfo.isPecEnabled()) {
       const char *string_list_main_UnParkedL0 = L_MM_GOTO "\n" L_MM_SYNC "\n" L_MM_ALIGN "\n" L_MM_PARKING "\n" L_MM_TRACKING "\n" L_MM_PEC "\n" L_MM_SETTINGS;
       current_selection_L0 = display->UserInterfaceSelectionList(&buttonPad, L_MM_MAIN_MENU, current_selection_L0, string_list_main_UnParkedL0);
       switch (current_selection_L0) {

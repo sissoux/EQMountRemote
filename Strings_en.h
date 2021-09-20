@@ -1,6 +1,13 @@
 // -----------------------------------------------------------------------------------
 // Locale English (default,) ISO ISO639-1 language code "en"
 
+// Fonts
+// see https://github.com/olikraus/u8g2/wiki/fntlistall for the complete list of fonts
+#define LF_CATALOGS u8g2_font_6x13_tf       //  9 pixel height
+#define LF_GREEK u8g2_font_unifont_t_greek  // 10 pixel height
+#define LF_STANDARD u8g2_font_helvR10_tf    // 11 pixel height
+#define LF_LARGE u8g2_font_helvR12_tf       // 12 pixel height
+
 // General
 #define L_OK "OK"
 #define L_ON "ON"
@@ -18,6 +25,7 @@
 #define L_FAILED "Failed"
 #define L_DEGREE "degree"
 #define L_ARCSEC "arc-sec"
+#define L_MICRON_PER_C "um/C"
 #define L_DAYS "Days"
 
 // common abbreviations
@@ -79,6 +87,7 @@
 #define L_FKEY_FOCUSER "Focuser"
 #define L_FKEY_FOCUSER2 "Focuser 2"
 #define L_FKEY_ROTATOR "Rotator"
+#define L_FKEY_INTERVALOMETER "Intervalometer"
 #define L_FKEY_FEATURE_KEYS "Feature Keys"
 
 // main menu root
@@ -214,6 +223,12 @@
 #define L_FOC_AT_HOME  "At Home"
 #define L_FOCUSER "Focuser"
 #define L_FOC_AT_HALF "At Half Trvl?"
+#define L_FOC_TC "Temp. Comp?"
+#define L_FOC_TC_COEF "TC Coef."
+#define L_FOC_TC_DEADBAND "TC Deadband"
+#define L_FOC_TC_DB_UNITS "micron(s)"
+#define L_FOC_BACKLASH "Backlash"
+#define L_FOC_BL_UNITS "micron(s)"
 
 // rotator
 #define L_ROT_RET_HOME "Return Home"
@@ -224,6 +239,14 @@
 #define L_ROTATOR "Rotator"
 #define L_ROT_AT_HOME_ZERO "At Home/Zero?"
 #define L_ROT_REVERSE "Reverse"
+
+// Intervalometer
+
+#define L_SET_INTV_EXP      "Expo time"
+#define L_SET_INTV_DELAY    "Pause time"
+#define L_SET_INTV_COUNT    "Expo count"
+#define L_INTV_S_UNITS      "s"
+#define L_STA_INTV_CAPT     "Capturing!"
 
 // -------------------- menu, sync/goto --------------------
 
@@ -394,6 +417,7 @@
 #define L_LX200_SNCOK_2 "Synced!"
 #define L_LX200_GOTOK_1 "Slew to"
 #define L_LX200_GOTOK_2 "Target"
+
 
 // ----------------------- u8g2_ext_catalog.cpp -------------------------
 
