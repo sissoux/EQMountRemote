@@ -78,6 +78,7 @@ public:
   ParkState getParkState();
   TrackState getTrackingState();
   bool atHome();
+  bool isGPSSynced();
   bool isPecEnabled();
   bool isPecPlaying();
   bool isPecRecording();

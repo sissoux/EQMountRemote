@@ -148,6 +148,11 @@ bool Telescope::isPecEnabled()
   if (strlen(TelStatus)<5) return false;
   if ((TelStatus[4]&0b00000111)==0) return false; else return true;
 }
+bool Telescope::isGPSSynced()
+{
+  if (strlen(TelStatus)<1) return false;
+  if ((TelStatus[0]&0b00000100)!=0) return true; else return false; //USE Previous PPS Sync Definition
+}
 bool Telescope::isPecPlaying()
 {
   // PEC status: 0 ignore, 1 get ready to play, 2 playing, 3 get ready to record, 4 recording
